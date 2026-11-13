@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>كنز الربع الخالي</title>
+<meta name="description" content="تجربة واقع معزز لدرس المناطق الرملية – الربع الخالي، الصف الخامس الابتدائي.">
+<meta name="theme-color" content="#F6E7C8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+  :root {
+    --sand-50: #FDF6E9;
+    --sand-100: #F6E7C8;
+    --sand-300: #E8C27F;
+    --sand-500: #D2913A;
+    --sand-700: #8A5A2B;
+    --ink: #3B2614;
+    --ink-soft: #6B4F35;
+    --sky: #2E9BD6;
+    --ok: #1E9E62;
+    --card: #FFFDF8;
+    --shadow: 0 10px 30px rgba(90, 55, 20, .18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'Tajawal', system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--sand-100) 0%, var(--sand-50) 55%);
+    display: flex; flex-direction: column;
+    min-height: 100svh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  header {
+    padding: max(14px, env(safe-area-inset-top)) 16px 10px;
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(1.7rem, 6vw, 2.4rem);
+    font-weight: 800;
+    color: var(--sand-700);
+    letter-spacing: 0;
+  }
+  .intro {
+    margin: 0 auto;
+    max-width: 640px;
+    font-size: clamp(1rem, 3.6vw, 1.15rem);
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+
+  main { flex: 1; display: flex; flex-direction: column; padding: 0 12px max(12px, env(safe-area-inset-bottom)); }
+  model-viewer {
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 420px;
+    /* model-viewer يحسب مواقع الكنوز من اليسار، فنخليه LTR والمحتوى داخله RTL */
+    direction: ltr;
+    border-radius: 24px;
+    background: radial-gradient(120% 90% at 50% 15%, #FFF8EA 0%, #F2DDB3 70%, #E7C995 100%);
+    box-shadow: inset 0 0 0 1px rgba(138, 90, 43, .15);
+    --poster-color: transparent;
+    --progress-bar-color: var(--sand-500);
+    position: relative;
+  }
+
+  /* عدّاد الكنوز داخل المشهد حتى يظهر في وضع AR أيضاً */
+  .counter, .card, .note, .done, .ar-btn, .loading { direction: rtl; }
+  .counter {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    background: rgba(255, 253, 248, .94);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    font-weight: 700; font-size: 1.05rem;
+    white-space: nowrap;
+  }
+  .dots { display: flex; gap: 5px; }
+  .dots span {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #E9D7B5; transition: background .3s, transform .3s;
+  }
+  .dots span.on { background: var(--sand-500); transform: scale(1.15); }
+
+  /* أزرار الكنوز (hotspots) */
+  .hotspot {
+    width: 50px; height: 50px; padding: 0;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: var(--sand-500);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+    font-size: 24px; line-height: 1;
+    display: grid; place-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: transform .2s, opacity .3s;
+    font-family: inherit;
+  }
+  .hotspot::after {
+    content: ''; position: absolute; inset: -9px;
+    border-radius: 50%;
+    border: 3px solid rgba(210, 145, 58, .7);
+    animation: pulse 1.8s ease-out infinite;
+    pointer-events: none;
+  }
+  .hotspot.found { background: var(--ok); }
+  .hotspot.found::after { display: none; }
+  .hotspot.found .check {
+    position: absolute; top: -6px; right: -6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; color: var(--ok);
+    font-size: 14px; font-weight: 800;
+    display: grid; place-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  }
+  .hotspot:active { transform: scale(.92); }
+  @keyframes pulse {
+    0% { transform: scale(.85); opacity: 1; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
+
+  /* بطاقة الكنز */
+  .card {
+    position: absolute; left: 12px; right: 12px; bottom: 12px;
+    margin: 0 auto; max-width: 520px;
+    background: var(--card);
+    border-radius: 22px;
+    padding: 18px 18px 16px;
+    box-shadow: var(--shadow);
+    border-top: 6px solid var(--sand-500);
+    transform: translateY(20px); opacity: 0; pointer-events: none;
+    transition: transform .3s ease, opacity .3s ease;
+  }
+  .card.show { transform: none; opacity: 1; pointer-events: auto; }
+  .card, .counter, .done { z-index: 10; }
+  /* أثناء قراءة البطاقة تخفّ الدوائر حتى ما تغطي عليها */
+  model-viewer.card-open .hotspot { opacity: .25; pointer-events: none; }
+  .card h2 {
+    margin: 0 0 8px; font-size: 1.35rem; font-weight: 800;
+    display: flex; align-items: center; gap: 8px; color: var(--sand-700);
+  }
+  .card p { margin: 0 0 14px; font-size: 1.22rem; line-height: 1.8; font-weight: 500; }
+  .card .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font-family: inherit; font-size: 1.05rem; font-weight: 700;
+    border: 0; border-radius: 14px;
+    padding: 11px 18px; min-height: 46px;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--sand-500); color: #fff; }
+  .btn-ghost { background: #F3E6CC; color: var(--ink); }
+  .btn[hidden] { display: none; }
+
+  /* زر AR */
+  .ar-btn {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    font-family: inherit; font-size: 1.15rem; font-weight: 800;
+    color: #fff; background: var(--sky);
+    border: 0; border-radius: 999px;
+    padding: 13px 24px;
+    box-shadow: 0 8px 20px rgba(46, 155, 214, .4);
+    white-space: nowrap; cursor: pointer;
+  }
+  model-viewer.card-open .ar-btn { opacity: 0; pointer-events: none; }
+
+  .note {
+    position: absolute; bottom: 14px; left: 14px; right: 14px;
+    margin: 0 auto; max-width: 460px;
+    text-align: center; font-size: .98rem; line-height: 1.6;
+    color: var(--ink-soft);
+    background: rgba(255, 253, 248, .9);
+    border-radius: 14px; padding: 8px 12px;
+  }
+  model-viewer.card-open .note { display: none; }
+  .note[hidden] { display: none; }
+
+  /* رسالة الاكتمال */
+  .done {
+    position: absolute; top: 64px; left: 50%;
+    transform: translate(-50%, -10px) scale(.95);
+    background: var(--ok); color: #fff;
+    font-size: clamp(1.15rem, 4.5vw, 1.4rem); font-weight: 800;
+    padding: 12px 22px; border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(30, 158, 98, .4);
+    opacity: 0; pointer-events: none;
+    transition: opacity .4s, transform .4s;
+    text-align: center; white-space: nowrap;
+  }
+  .done.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+  .loading {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 1.1rem; color: var(--ink-soft); pointer-events: none;
+  }
+  .error { color: #B03A2E; font-weight: 700; padding: 20px; text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hotspot::after { animation: none; }
+    .card, .done { transition: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>كنز الربع الخالي</h1>
+  <p class="intro">الربع الخالي يقع في جنوب المملكة، ومن أكبر الصحاري الرملية في العالم، وساعدت الرياح على تجمّع رماله منذ أكثر من ١٧ ألف سنة</p>
+</header>
+
+<main>
+  <model-viewer id="mv"
+    src="diorama.glb"
+    alt="مجسم ثلاثي الأبعاد لكثبان الربع الخالي الرملية وحولها أطلال حجرية وجرة فخار وبرج نفط وواحة بنخلتين وأحجار كريمة وجمل"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    ar-scale="fixed"
+    ar-placement="floor"
+    camera-controls
+    touch-action="pan-y"
+    camera-orbit="20deg 60deg 82%"
+    min-camera-orbit="auto 10deg auto"
+    max-camera-orbit="auto 82deg auto"
+    interaction-prompt="auto"
+    shadow-intensity="1"
+    shadow-softness="0.8"
+    environment-image="neutral"
+    exposure="1.05"
+    loading="eager">
+
+    <button class="hotspot" slot="hotspot-ruins" data-key="ruins"
+      data-position="-0.110m 0.078m 0.070m" data-normal="0m 1m 0m"
+      aria-label="كنز الأطلال">🏛️</button>
+    <button class="hotspot" slot="hotspot-oil" data-key="oil"
+      data-position="0.120m 0.168m -0.100m" data-normal="0m 1m 0m"
+      aria-label="كنز النفط">🛢️</button>
+    <button class="hotspot" slot="hotspot-oasis" data-key="oasis"
+      data-position="0.095m 0.038m 0.075m" data-normal="0m 1m 0m"
+      aria-label="كنز الواحة">🌴</button>
+    <button class="hotspot" slot="hotspot-gems" data-key="gems"
+      data-position="0.000m 0.043m 0.125m" data-normal="0m 1m 0m"
+      aria-label="كنز الأحجار">💎</button>
+
+    <div class="counter" aria-live="polite">
+      <span id="countText">اكتشفتِ ٠ من ٤ كنوز</span>
+      <span class="dots" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+    </div>
+
+    <div class="done" id="done" role="status">أحسنتِ! الربع الخالي ليس خالياً</div>
+
+    <div class="loading" id="loading" slot="poster">جاري تحميل المجسم…</div>
+
+    <button slot="ar-button" class="ar-btn">شاهدي في مكانك (AR) 📱</button>
+
+    <p class="note" id="note" hidden></p>
+
+    <section class="card" id="card" role="dialog" aria-modal="false" aria-labelledby="cardTitle">
+      <h2 id="cardTitle"></h2>
+      <p id="cardText"></p>
+      <div class="actions">
+        <button class="btn btn-primary" id="speakBtn" type="button">🔊 اقرئي لي</button>
+        <button class="btn btn-ghost" id="closeBtn" type="button">إغلاق</button>
+      </div>
+    </section>
+  </model-viewer>
+</main>
+
+<script>
+  // النصوص كما هي من كتاب الطالبة
+  const TREASURES = {
+    ruins: { icon: '🏛️', title: 'الأطلال',
+      text: 'كنز من الماضي: كان الربع الخالي موطناً لحضارات قديمة اندثر أغلبها وغمرتها الرمال' },
+    oil:   { icon: '🛢️', title: 'النفط',
+      text: 'من إنجازات وطني: استخراج النفط من حقل الشيبة الذي بدأت فيه أرامكو السعودية عام ١٤١٩هـ' },
+    oasis: { icon: '🌴', title: 'الواحة',
+      text: 'في الربع الخالي بعض الواحات والأشكال الجاذبة للسياحة' },
+    gems:  { icon: '💎', title: 'الأحجار',
+      text: 'في رمال الربع الخالي كثير من المعادن النفيسة' },
+  };
+  const TOTAL = Object.keys(TREASURES).length;
+  const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+  const toArabic = (n) => String(n).replace(/\d/g, (d) => AR_DIGITS[d]);
+
+  const mv = document.getElementById('mv');
+  const card = document.getElementById('card');
+  const cardTitle = document.getElementById('cardTitle');
+  const cardText = document.getElementById('cardText');
+  const speakBtn = document.getElementById('speakBtn');
+  const closeBtn = document.getElementById('closeBtn');
+  const countText = document.getElementById('countText');
+  const dots = document.querySelectorAll('.dots span');
+  const done = document.getElementById('done');
+  const note = document.getElementById('note');
+
+  const found = new Set();
+  let current = null;
+
+  function updateCounter() {
+    countText.textContent = `اكتشفتِ ${toArabic(found.size)} من ${toArabic(TOTAL)} كنوز`;
+    dots.forEach((d, i) => d.classList.toggle('on', i < found.size));
+  }
+
+  function openCard(key) {
+    const t = TREASURES[key];
+    current = key;
+    cardTitle.textContent = `${t.icon} ${t.title}`;
+    cardText.textContent = t.text;
+    card.classList.add('show');
+    mv.classList.add('card-open');
+    stopSpeaking();
+
+    if (!found.has(key)) {
+      found.add(key);
+      const hs = mv.querySelector(`.hotspot[data-key="${key}"]`);
+      hs.classList.add('found');
+      const check = document.createElement('span');
+      check.className = 'check'; check.textContent = '✓';
+      hs.appendChild(check);
+      updateCounter();
+      if (found.size === TOTAL) setTimeout(() => done.classList.add('show'), 500);
+    }
+  }
+  function closeCard() {
+    card.classList.remove('show');
+    mv.classList.remove('card-open');
+    current = null;
+    stopSpeaking();
+  }
+
+  mv.querySelectorAll('.hotspot').forEach((hs) =>
+    hs.addEventListener('click', (e) => { e.stopPropagation(); openCard(hs.dataset.key); }));
+  closeBtn.addEventListener('click', closeCard);
+
+  // ---------- القراءة بالصوت (Web Speech API) ----------
+  const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+  let arVoice = null;
+  function pickVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    arVoice = voices.find((v) => /^ar[-_]SA/i.test(v.lang)) || voices.find((v) => /^ar/i.test(v.lang)) || null;
+    // إذا تحمّلت الأصوات وما فيها عربي، نخفي الزر بدل ما يقرأ بلكنة خاطئة
+    if (voices.length && !arVoice) speakBtn.hidden = true;
+  }
+  if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
+    speakBtn.hidden = true;
+  } else {
+    pickVoice();
+    synth.addEventListener?.('voiceschanged', pickVoice);
+  }
+  function stopSpeaking() {
+    if (synth) synth.cancel();
+    speakBtn.textContent = '🔊 اقرئي لي';
+  }
+  speakBtn.addEventListener('click', () => {
+    if (!synth || !current) return;
+    if (synth.speaking) { stopSpeaking(); return; }
+    const u = new SpeechSynthesisUtterance(TREASURES[current].text);
+    u.lang = arVoice ? arVoice.lang : 'ar-SA';
+    if (arVoice) u.voice = arVoice;
+    u.rate = 0.9;
+    u.onend = u.onerror = () => { speakBtn.textContent = '🔊 اقرئي لي'; };
+    speakBtn.textContent = '⏹ إيقاف';
+    synth.speak(u);
+  });
+
+  // ---------- حالة التحميل ودعم AR ----------
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  mv.addEventListener('load', () => {
+    document.getElementById('loading')?.remove();
+    if (!mv.canActivateAR) {
+      note.textContent = 'حرّكي المجسم بإصبعك ولفّيه، والمسي الدوائر لتكتشفي الكنوز';
+      note.hidden = false;
+    } else if (isIOS) {
+      // في Quick Look على الآيباد يظهر المجسم على الطاولة بدون الدوائر
+      note.textContent = 'بعد ما تشوفين المجسم على الطاولة، ارجعي هنا والمسي الدوائر لتكتشفي الكنوز';
+      note.hidden = false;
+      note.style.bottom = '78px';
+    }
+  });
+  mv.addEventListener('error', () => {
+    const l = document.getElementById('loading');
+    if (l) { l.innerHTML = '<div class="error">تعذّر تحميل المجسم. تأكدي من الاتصال بالإنترنت ثم حدّثي الصفحة.</div>'; }
+  });
+  mv.addEventListener('ar-status', (e) => {
+    if (e.detail.status === 'failed') {
+      note.textContent = 'ما قدرنا نفتح الواقع المعزز على هذا الجهاز، لكن تقدرين تكتشفين الكنوز هنا';
+      note.hidden = false;
+    }
+  });
+
+  updateCounter();
+</script>
+</body>
+</html>
